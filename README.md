@@ -8,6 +8,10 @@ It replaces the routing diagnostics screen Microsoft retired, and it works for a
 unified routing can route: cases, emails, conversations on any channel, and custom
 tables.
 
+![Overview](docs/overview.png)
+
+The lifecycle of one routed record, and the Application Insights trace behind it:
+
 ![Lifecycle](docs/lifecycle.png)
 ![Trace](docs/trace.png)
 
