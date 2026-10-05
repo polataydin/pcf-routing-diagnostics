@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="PLT"
+           constructor="RoutingDiagnostics"
+           version="1.0.7"
+           display-name-key="Routing Diagnostics"
+           description-key="Explore the unified routing lifecycle of a record or conversation"
+           control-type="virtual">
+
+    <!-- The control reads Dataverse through the Web API rather than through the
+         dataset, but a dataset binding is what lets it sit on a view and therefore
+         on the sitemap. -->
+    <data-set name="requests" display-name-key="Diagnostic requests" />
+
+    <resources>
+      <code path="index.ts" order="1" />
+      <platform-library name="React" version="16.14.0" />
+      <platform-library name="Fluent" version="9.46.2" />
+    </resources>
+
+    <feature-usage>
+      <uses-feature name="WebAPI" required="true" />
+    </feature-usage>
+  </control>
+</manifest>

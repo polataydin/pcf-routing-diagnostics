@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Name>RoutingDiagnostics</Name>
+    <ProjectGuid>b2f2d4a6-9f63-4b4e-9a2a-3c6d8f1e5a70</ProjectGuid>
+    <OutputPath>$(MSBuildThisFileDirectory)out\controls</OutputPath>
+    <TargetFramework>net462</TargetFramework>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ExcludeDirectories Include="$(OutputPath)\**" />
+    <ExcludeDirectories Include=".gitignore" />
+    <ExcludeDirectories Include="bin\**" />
+    <ExcludeDirectories Include="obj\**" />
+    <ExcludeDirectories Include="node_modules\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.PowerApps.MSBuild.Pcf" Version="1.*" />
+  </ItemGroup>
+
+  <Target Name="PcfBuildCleanTarget" AfterTargets="Clean">
+    <RemoveDir Directories="$(OutputPath)" />
+  </Target>
+
+</Project>
