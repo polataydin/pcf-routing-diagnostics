@@ -65,6 +65,11 @@ A recurring bulk delete job clears old request and event rows.
 5. Add the **Routing diagnostics** custom page to the sitemap of whichever model-driven
    app should host it, then publish that app.
 
+That last step is all the setup the control needs. It reads Dataverse itself rather than
+a bound column, so it does not go on a form, a view or a dashboard: putting the page on
+the sitemap is enough, and it then covers every routed record and conversation in the
+environment.
+
 Diagnostics must be switched on for unified routing, otherwise Application Insights has
 nothing to read. See
 [View diagnostics for unified routing](https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/unified-routing-diagnostics).
