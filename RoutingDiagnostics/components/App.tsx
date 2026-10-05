@@ -98,7 +98,7 @@ const PAGE_SIZE = 250;
 
 /** Shown in the header so a deployed build can be identified at a glance. Kept in
  *  step with the version in ControlManifest.Input.xml by hand. */
-const VERSION = "1.0.7";
+const VERSION = "1.1.0";
 
 export interface AppProps {
   webAPI: ComponentFramework.WebApi;

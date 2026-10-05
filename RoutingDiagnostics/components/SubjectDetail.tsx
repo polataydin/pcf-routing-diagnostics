@@ -64,30 +64,25 @@ const useStyles = makeStyles({
   },
   lane: {
     display: "grid",
-    gridTemplateColumns: "72px 1fr 260px",
+    gridTemplateColumns: "72px 1fr 320px",
     alignItems: "center",
     columnGap: tokens.spacingHorizontalM,
   },
-  /** The track is the whole span of the subject; the bar inside it is placed where
-   *  that run actually happened, so two runs hours apart no longer look alike. */
-  track: {
-    position: "relative",
-    height: "28px",
-    ...shorthands.borderRadius(tokens.borderRadiusSmall),
-    backgroundColor: tokens.colorNeutralBackground3,
-  },
+  /** One bar per run, filling the lane. Runs are not placed on a shared clock:
+   *  weeks can pass between two routings and that gap drew as a blank band that
+   *  said nothing. The bar compares the phases inside a run, which is the
+   *  question it is actually asked. */
   bar: {
-    position: "absolute",
-    top: "0",
-    bottom: "0",
     display: "flex",
-    minWidth: "2px",
+    height: "28px",
     ...shorthands.overflow("hidden"),
     ...shorthands.border("1px", "solid", tokens.colorNeutralStroke2),
     ...shorthands.borderRadius(tokens.borderRadiusSmall),
     backgroundColor: tokens.colorNeutralBackground1,
   },
   barWaiting: {
+    flexBasis: "auto",
+    flexShrink: 0,
     backgroundColor: tokens.colorNeutralBackground3,
     display: "flex",
     alignItems: "center",
@@ -96,6 +91,8 @@ const useStyles = makeStyles({
     whiteSpace: "nowrap",
   },
   barWorking: {
+    flexBasis: "auto",
+    flexShrink: 0,
     backgroundColor: tokens.colorPaletteGreenBackground2,
     display: "flex",
     alignItems: "center",
@@ -104,6 +101,8 @@ const useStyles = makeStyles({
     whiteSpace: "nowrap",
   },
   barOffered: {
+    flexBasis: "auto",
+    flexShrink: 0,
     backgroundColor: tokens.colorPaletteMarigoldBackground2,
     display: "flex",
     alignItems: "center",
@@ -111,10 +110,9 @@ const useStyles = makeStyles({
     ...shorthands.overflow("hidden"),
     whiteSpace: "nowrap",
   },
-  axis: {
+  laneHead: {
     display: "flex",
-    justifyContent: "space-between",
-    color: tokens.colorNeutralForeground3,
+    flexDirection: "column",
   },
   note: {
     color: tokens.colorNeutralForeground3,
@@ -196,20 +194,6 @@ export const SubjectDetail: React.FC<SubjectDetailProps> = ({
     [sessions]
   );
 
-  const axis = React.useMemo(() => timelineAxis(chronological), [chronological]);
-
-  // The axis ends at the last close, or at "now" while something is still open.
-  // "Now" has no stored value and therefore no platform rendering, so it is named
-  // rather than printed as a time.
-  const axisEndLabel = React.useMemo(() => {
-    const open = chronological.some((item) => !item.closedOn);
-    if (open) return "now";
-    const last = [...chronological]
-      .sort((a, b) => Date.parse(a.closedOn ?? "") - Date.parse(b.closedOn ?? ""))
-      .pop();
-    return stamp(last?.closedOnLabel);
-  }, [chronological]);
-
   return (
     <div className={styles.root}>
       <div className={styles.summary}>
@@ -258,7 +242,7 @@ export const SubjectDetail: React.FC<SubjectDetailProps> = ({
         <div className={styles.sectionHead}>
           <Subtitle2>Lifecycle</Subtitle2>
           <Caption1 className={styles.aside}>
-            Each bar is one live work item, placed on a shared timeline
+            Each bar is one live work item; the widths compare the phases within it
           </Caption1>
         </div>
 
@@ -282,38 +266,52 @@ export const SubjectDetail: React.FC<SubjectDetailProps> = ({
             : 0;
           const workingMs = acceptedOn ? durationBetween(acceptedOn, endedOn) ?? 0 : 0;
 
-          const start = Date.parse(item.createdOn ?? "");
-          const left = isNaN(start) ? 0 : ((start - axis.from) / axis.span) * 100;
-          const width = ((waitMs + offeredMs + workingMs) / axis.span) * 100;
+          const queueLabel = `In queue · ${elapsedLabel(waitFrom, waitedUntil)}`;
+          const offeredLabel = firstSession
+            ? `Offered · ${elapsedLabel(firstSession.createdOn, offeredUntil)}`
+            : null;
+          const workingLabel = acceptedOn
+            ? `Working · ${elapsedLabel(acceptedOn, endedOn)}`
+            : null;
 
           return (
             <div key={item.activityid} className={styles.lane}>
-              <Body1Strong>Run {runNumbers.get(item.activityid)}</Body1Strong>
-              <div className={styles.track}>
-                <div
-                  className={styles.bar}
-                  style={{
-                    left: `${clamp(left, 0, 99)}%`,
-                    width: `${clamp(width, 0.5, 100 - clamp(left, 0, 99))}%`,
-                  }}
-                >
-                  <div className={styles.barWaiting} style={{ flexGrow: Math.max(1, waitMs) }}>
-                    <Caption1>In queue · {elapsedLabel(waitFrom, waitedUntil)}</Caption1>
-                  </div>
-                  {firstSession && (
-                    <div className={styles.barOffered} style={{ flexGrow: Math.max(1, offeredMs) }}>
-                      <Caption1>
-                        Offered · {elapsedLabel(firstSession.createdOn, offeredUntil)}
-                      </Caption1>
-                    </div>
-                  )}
-                  {acceptedOn && (
-                    <div className={styles.barWorking} style={{ flexGrow: Math.max(1, workingMs) }}>
-                      <Caption1>Working · {elapsedLabel(acceptedOn, endedOn)}</Caption1>
-                    </div>
-                  )}
-                </div>
+              <div className={styles.laneHead}>
+                <Body1Strong>Run {runNumbers.get(item.activityid)}</Body1Strong>
+                <Caption1 className={styles.note}>{stamp(item.createdOnLabel)}</Caption1>
               </div>
+
+              {/* Each segment is as wide as its own words, and the space left over
+                  is shared by duration. A phase that took no time is therefore
+                  still readable, and the long one is still visibly the long one. */}
+              <div className={styles.bar}>
+                <div
+                  className={styles.barWaiting}
+                  style={{ flexGrow: Math.max(1, waitMs) }}
+                  title={queueLabel}
+                >
+                  <Caption1>{queueLabel}</Caption1>
+                </div>
+                {firstSession && (
+                  <div
+                    className={styles.barOffered}
+                    style={{ flexGrow: Math.max(1, offeredMs) }}
+                    title={offeredLabel ?? undefined}
+                  >
+                    <Caption1>{offeredLabel}</Caption1>
+                  </div>
+                )}
+                {acceptedOn && (
+                  <div
+                    className={styles.barWorking}
+                    style={{ flexGrow: Math.max(1, workingMs) }}
+                    title={workingLabel ?? undefined}
+                  >
+                    <Caption1>{workingLabel}</Caption1>
+                  </div>
+                )}
+              </div>
+
               <Caption1>
                 {describeOutcome(item, itemSessions.length > 0).label}
                 {item.closedOn ? ` ${stamp(item.closedOnLabel)}` : ""}
@@ -322,15 +320,6 @@ export const SubjectDetail: React.FC<SubjectDetailProps> = ({
             </div>
           );
         })}
-
-        <div className={styles.lane}>
-          <span />
-          <div className={styles.axis}>
-            <Caption1>{stamp(chronological[0]?.createdOnLabel)}</Caption1>
-            <Caption1>{axisEndLabel}</Caption1>
-          </div>
-          <span />
-        </div>
       </section>
 
       <section className={styles.section}>
@@ -475,27 +464,6 @@ function showRawReason(item: LiveWorkItem): boolean {
   return !isRecordRouting;
 }
 
-/** One axis for every run: from the first attempt to the last close, or to now while
- *  something is still open. Bars are then placed on it rather than each being drawn
- *  from the left, which used to make a run hours later look simultaneous. */
-function timelineAxis(items: LiveWorkItem[]): { from: number; to: number; span: number } {
-  let from = Number.POSITIVE_INFINITY;
-  let to = Number.NEGATIVE_INFINITY;
-
-  for (const item of items) {
-    const start = Date.parse(item.createdOn ?? "");
-    if (!isNaN(start)) from = Math.min(from, start);
-    const end = item.closedOn ? Date.parse(item.closedOn) : Date.now();
-    if (!isNaN(end)) to = Math.max(to, end);
-  }
-
-  if (!isFinite(from) || !isFinite(to)) {
-    const now = Date.now();
-    return { from: now, to: now + 1, span: 1 };
-  }
-
-  return { from, to, span: Math.max(1, to - from) };
-}
 
 /** When the agent took the work. The session records it, and the participant row
  *  carries it too for the sessions that predate that column being written. */
@@ -505,9 +473,4 @@ function firstAcceptance(sessions: Session[]): string | null {
     if (accepted) return accepted;
   }
   return null;
-}
-
-function clamp(value: number, min: number, max: number): number {
-  if (isNaN(value)) return min;
-  return Math.min(max, Math.max(min, value));
 }
