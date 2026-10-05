@@ -66,8 +66,9 @@ A recurring bulk delete job clears old request and event rows.
 3. Set the two connection references: Dataverse and Azure Monitor Logs. The Azure
    Monitor connection needs read access to that Application Insights resource.
 4. Turn on the **Routing Diagnostics - Fetch Events** flow.
-5. Add the **Routing diagnostics** custom page to the sitemap of whichever model-driven
-   app should host it, then publish that app.
+5. Add the custom page **plt_routingdiagnosticspage** (name
+   `plt_pltroutingdiagnosticspage_0ec6c`) to the sitemap of whichever model-driven app
+   should host it, then publish that app.
 
 That last step is all the setup the control needs. It reads Dataverse itself rather than
 a bound column, so it does not go on a form, a view or a dashboard: putting the page on
