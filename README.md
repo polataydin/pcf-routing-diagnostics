@@ -71,11 +71,18 @@ nothing to read. See
 
 ## Permissions
 
-Lifecycle reads `msdyn_ocliveworkitem`, `msdyn_ocsession`, `msdyn_sessionparticipant`
-and `queueitem`. Name resolution additionally reads `queue`, `systemuser`,
-`characteristic`, `bookableresource`, `bookableresourcecharacteristic`,
-`msdyn_liveworkstream` and `msdyn_decisionruleset`. A table the user cannot read is not
-an error: the id stays on screen as written.
+Everything below is read by the control itself, with the privileges of whoever is
+looking at the page. The flow's own connection is only used to query Application
+Insights and write the event rows.
+
+- Create and read on `plt_urd_diagnosticrequest`, read on
+  `plt_urd_routingdiagnosticevent`. Without these the Trace tab cannot run.
+- Read on `msdyn_ocliveworkitem`, `msdyn_ocsession`, `msdyn_sessionparticipant` and
+  `queueitem`, which is what Lifecycle is built from.
+- Read on `queue`, `systemuser`, `characteristic`, `bookableresource`,
+  `bookableresourcecharacteristic`, `msdyn_liveworkstream` and `msdyn_decisionruleset`,
+  used only to turn the ids a trace logs into names. A table the user cannot read is not
+  an error: the id stays on screen as written.
 
 ## Build
 
